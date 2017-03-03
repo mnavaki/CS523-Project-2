@@ -1,7 +1,7 @@
 # CS 523 - Project 2
 # T16
 # Core warrior with GA
-
+from __future__ import division
 import numpy as np
 import numpy.matlib
 import matplotlib.pyplot as plt
@@ -55,8 +55,8 @@ def is_viable(file_name):
     return True
 
 def create_a_population(pop_size):
+    global max_lines
 
-    max_lines = 50
     population = []
     for i in range(pop_size):
         # open a file
@@ -76,6 +76,7 @@ def create_a_population(pop_size):
         genome = file_name
         indv = GAIndividual(genome, fitness)
         population.append(indv)
+        print "warrior: ", warrior_name, " generated!"
 
     return population
 
@@ -83,10 +84,12 @@ def create_a_population(pop_size):
 #Returns number of wins over the benchmakrs
 def fitness_func(red_filename):
     global benchmark_dir
+    global number_of_rounds
+
     score_total = 0
     for file in os.listdir(benchmark_dir):
         file_dir = benchmark_dir + file
-        command = "./pmars -r 50 -b -o " + red_filename + " " + file_dir + " > res.txt"
+        command = "./pmars -r " + str(number_of_rounds) + " -b -o " + red_filename + " " + file_dir + " > res.txt"
         os.system(command)
         res_file = open("res.txt", "r")
         result = res_file.read()
@@ -95,11 +98,7 @@ def fitness_func(red_filename):
         oponent_score = int(res_line[1])
         my_score = int(res_line[3])
         score_total += my_score
-        #if my_score > oponent_score:
-        #    win_count += 1
-        #print result[result_index:]
-        #print oponent_score, my_score
-    #print score_total
+
     return score_total
 
 
@@ -144,44 +143,66 @@ def mutate(individual):
             new_code += "\n" + red_code_lines[line_index]
 
     red_file.close()
-    if len(new_code.split("\n")) <= 4:
-        return False
-    else:
-        red_file = open(individual.genome, "w")
-        red_file.write(new_code)
-        red_file.close()
-    return True
+    if len(new_code.split("\n")) <= 4: # avoid an empty code file
+        new_code += create_aLineOfCode()
+    red_file = open(individual.genome, "w")
+    red_file.write(new_code)
+    red_file.close()
+
+
+# roulette selection method
+def roulette_selection(population, pop_size):
+    new_population = []
+    new_pop_size = 0
+    total_fitness = sum(pop.fitness for pop in population)
+    #print "total fitness:", total_fitness
+    for i in range(pop_size):
+        prob = population[i].fitness/total_fitness
+        rand = random.uniform(0, 1)
+        if prob >= rand: ## if selected, append it to the new population
+            new_population.append(population[i])
+            new_pop_size += 1
+    return new_population, new_pop_size
+
+# Replace bottom half of population 
+# with random individuals from the top % half 
+def random_selection(population, pop_size):
+    # Sort population by fitness (in ascending order)
+    population = np.sort(population)
+    cutoff = pop_size/2
+    # ceiling in case the population size is odd
+    for i in range(cutoff):
+        index = np.random.randint(cutoff)
+        os.system("cp " + population[cutoff + index].genome + " " + population[i].genome)
+        population[i].fitness = population[cutoff + index].fitness
+    return population
+
 
 ## Simple GA that tries to find the maximum value
 ## of a 1D Function F. Example: GA(10, 0.5, 10, @(X) sin(X).*X.^2, 2.2)
 def GA(pop_size, mutation_rate, num_generations, fitness_func):
 
     population = create_a_population(pop_size)
+    print "initial populcation generated..."
     for generation in range(num_generations):
         # Mutate population
         for i in range(pop_size):
-            if mutate(population[i]) is False:
-                np.delete(population, i)
+            mutate(population[i])
 
         # Evaluate fitness
         for i in range(pop_size):
             population[i].fitness = fitness_func(population[i].genome)
-
-        # Sort population by fitness (in descending order)
-        population = np.sort(population)
-        total_score = 0
-        for i in range(pop_size):
-            total_score += population[i].fitness
-        print "total score: ", total_score
+     
         # Replace bottom half of population 
         # with random individuals from the top % half
-        cutoff = pop_size/2
-        # ceiling in case the population size is odd
-        for i in range(cutoff):
-            index = np.random.randint(cutoff)
-            os.system("cp " + population[cutoff + index].genome + " " + population[i].genome)
-            population[i].fitness = population[cutoff + index].fitness
+        #population = random_selection(population, pop_size)
 
+        ## roulette selection
+        population, pop_size = roulette_selection(population, pop_size)
+        
+        max_score = max(pop.fitness for pop in population)
+        print "max score: ", max_score
+        
 opcodes = ['DAT', 'MOV', 'ADD', 'SUB',
            'MUL', 'DIV', 'MOD', 'JMP',
            'JMZ', 'JMN', 'DJN', 'SPL', 
@@ -189,9 +210,11 @@ opcodes = ['DAT', 'MOV', 'ADD', 'SUB',
            'LDP', 'STP', 'NOP']
 address_modes = ["#","$","@","<","*","{","}"]
 
+max_lines = 20 ## maximum numberlines of code for the initial population
+number_of_rounds = 100
 pop_size = 20
-mutation_rate = 20
-num_generations = 50
+mutation_rate = 30 # out of 100
+num_generations = 20
 
 benchmark_dir = "./WilkiesBench/"
 GA(pop_size, mutation_rate, num_generations, fitness_func)
