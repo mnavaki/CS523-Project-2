@@ -81,24 +81,38 @@ def create_a_population(pop_size):
     return population
 
 
-#Returns number of wins over the benchmakrs
+# Returns number of wins over the benchmakrs
+# fitness will be the score of running aganist benchmarks and other warriors
 def fitness_func(red_filename):
     global benchmark_dir
     global number_of_rounds
 
     score_total = 0
+    ## Running against benchmarks
     for file in os.listdir(benchmark_dir):
         file_dir = benchmark_dir + file
         command = "./pmars -r " + str(number_of_rounds) + " -b -o " + red_filename + " " + file_dir + " > res.txt"
         os.system(command)
         res_file = open("res.txt", "r")
         result = res_file.read()
-        result_index = result.find("Results")
-        res_line = result[result_index:].split(" ")
-        oponent_score = int(res_line[1])
-        my_score = int(res_line[3])
+        result_index = result.find(red_filename.replace('.red',''))
+        score_line = result[result_index:].split("\n")[0]
+        my_score = int(score_line.split(" ")[4])
         score_total += my_score
 
+    ## Running against other warriors
+    warriors_dir = "./"
+    for file in os.listdir(warriors_dir):
+        if file.endswith(".red") and file != red_filename:
+            file_dir = warriors_dir + file
+            command = "./pmars -r " + str(number_of_rounds) + " -b -o " + red_filename + " " + file_dir + " > res.txt"
+            os.system(command)
+            res_file = open("res.txt", "r")
+            result = res_file.read()
+            result_index = result.find(red_filename.replace('.red',''))
+            score_line = result[result_index:].split("\n")[0]
+            my_score = int(score_line.split(" ")[4])
+            score_total += my_score
     return score_total
 
 
@@ -155,6 +169,8 @@ def roulette_selection(population, pop_size):
     new_population = []
     new_pop_size = 0
     total_fitness = sum(pop.fitness for pop in population)
+    if total_fitness == 0:
+        return new_population, new_pop_size
     #print "total fitness:", total_fitness
     for i in range(pop_size):
         prob = population[i].fitness/total_fitness
@@ -198,9 +214,10 @@ def GA(pop_size, mutation_rate, num_generations, fitness_func):
         #population = random_selection(population, pop_size)
 
         ## roulette selection
+        max_score = 0
         population, pop_size = roulette_selection(population, pop_size)
-        
-        max_score = max(pop.fitness for pop in population)
+        if pop_size != 0:
+            max_score = max(pop.fitness for pop in population)
         print "max score: ", max_score
         
 opcodes = ['DAT', 'MOV', 'ADD', 'SUB',
@@ -212,11 +229,10 @@ address_modes = ["#","$","@","<","*","{","}"]
 
 max_lines = 20 ## maximum numberlines of code for the initial population
 number_of_rounds = 100
-pop_size = 20
-mutation_rate = 30 # out of 100
-num_generations = 20
+pop_size = 50
+mutation_rate = 20 # out of 100
+num_generations = 50
 
 benchmark_dir = "./WilkiesBench/"
 GA(pop_size, mutation_rate, num_generations, fitness_func)
-
 
