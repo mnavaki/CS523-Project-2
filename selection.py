@@ -3,7 +3,7 @@
 # Core warrior with GA: selection methods
 from __future__ import division
 import random 
-#import os
+import math
 import numpy as np
 from base import *
 
@@ -35,6 +35,25 @@ def tournament_selection(population, pop_size, tournament_size):
 	# Return the most fit individual
 	return individuals[0]
 
+
+'''
+Roulette selection method: The individuals are mapped to contiguous segments of a line, 
+such that each individual's segment is equal in size to its 
+fitness. A random number is generated and the individual whose 
+segment spans the random number is selected.
+'''
+def roulette_selection(population, pop_size):
+    total_fitness = sum(pop.fitness for pop in population)
+    rand = np.random.randint(1, total_fitness)
+    total_fitness_so_far = 0
+    # iterate untill we find a genome
+    for i in range(pop_size):
+        total_fitness_so_far += population[i].fitness
+        if rand <= total_fitness_so_far:
+            return population[i]
+
+
+'''
 # roulette selection method
 def roulette_selection(population, pop_size):
     new_population = []
@@ -62,7 +81,7 @@ def roulette_selection(population, pop_size):
     os.system("rm ./warriors/*") ## remove old population
     os.system("mv ./temp/* ./warriors/")  ## mv new population to the warriors directory
     return new_population, new_pop_size
-
+'''
 
 ''' Random selection method 
     Replace bottom half of population 
@@ -76,7 +95,6 @@ def random_selection(population, pop_size):
         index = np.random.randint(cutoff)
         wn_index = population[i].genome.find("T16") # get warrior name index
         copy(population[cutoff + index].genome, population[i].genome, population[i].genome[wn_index:].replace('.red',''))
-        #os.system("cp " + population[cutoff + index].genome + " " + population[i].genome)
         population[i].fitness = population[cutoff + index].fitness
     return population
 
