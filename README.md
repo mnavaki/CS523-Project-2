@@ -4,4 +4,6 @@ T16
 
 ## How to run
 
-python main.py
+    python main.py
+
+It maintains two top warriors under top-warrior directory.
