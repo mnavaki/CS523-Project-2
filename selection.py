@@ -21,7 +21,7 @@ def copy(redcode_src, redcode_dest, dest_warrior_name):
     dest_file.close()
 
 # tournament selection method
-def tournament_selection(population, pop_size, tournament_size):
+def tournament_selection_one(population, pop_size, tournament_size):
 
 	individuals = []
 	# Shuffle the indices
@@ -35,6 +35,24 @@ def tournament_selection(population, pop_size, tournament_size):
 	# Return the most fit individual
 	return individuals[0]
 
+# tournament selection method
+def tournament_selection(population, pop_size):
+    
+    new_population = []
+    os.system("mkdir -p ./tmp")
+    for i in range(pop_size):
+        tournament_size = np.random.rand(pop_size/2,pop_size)
+        indv = tournament_selection_one(population, pop_size, tournament_size)
+        warrior_name = "T16-" + str(i+1)
+        file_name = "./tmp/" + warrior_name + ".red"
+        copy(indv.genome, file_name, warrior_name)
+        new_indv = GAIndividual("./warriors/" + warrior_name + ".red", indv.fitness)
+        new_population.append(new_indv)
+
+    os.system("rm ./warriors/*") ## remove old population
+    os.system("mv ./tmp/* ./warriors/")  ## mv new population to the warriors directory
+    return new_population
+
 
 '''
 Roulette selection method: The individuals are mapped to contiguous segments of a line, 
@@ -42,7 +60,7 @@ such that each individual's segment is equal in size to its
 fitness. A random number is generated and the individual whose 
 segment spans the random number is selected.
 '''
-def roulette_selection(population, pop_size):
+def roulette_selection_one(population, pop_size):
     total_fitness = sum(pop.fitness for pop in population)
     rand = np.random.randint(1, total_fitness)
     total_fitness_so_far = 0
@@ -52,36 +70,24 @@ def roulette_selection(population, pop_size):
         if rand <= total_fitness_so_far:
             return population[i]
 
-
-'''
 # roulette selection method
 def roulette_selection(population, pop_size):
     new_population = []
-    new_pop_size = 0
-    total_fitness = sum(pop.fitness for pop in population)
-    if total_fitness == 0:
-        return new_population, new_pop_size
-    # iterate untill the new population is full
-    warrior_index = 1
-    os.system("mkdir -p ./temp")
-    while new_pop_size < pop_size:
-        rand = random.uniform(0, 1)
-        for i in range(pop_size):
-            prob = population[i].fitness/total_fitness ## TODO: what if prob gets zero
-            if prob >= rand: ## if selected, append it to the new population
-                warrior_name = "T16-" + str(warrior_index)
-                warrior_index += 1
-                file_name = "./temp/" + warrior_name + ".red"
-                copy(population[i].genome, file_name, warrior_name)
-                indv = GAIndividual("./warriors/" + warrior_name + ".red", population[i].fitness)
-                new_population.append(indv)
-                new_pop_size += 1
-                if pop_size == new_pop_size:
-                    break
+    os.system("mkdir -p ./tmp")
+    
+    for i in range(pop_size):
+        indv = roulette_selection_one(population, pop_size)
+        warrior_name = "T16-" + str(i+1)
+        file_name = "./tmp/" + warrior_name + ".red"
+        copy(indv.genome, file_name, warrior_name)
+        new_indv = GAIndividual("./warriors/" + warrior_name + ".red", indv.fitness)
+        new_population.append(new_indv)
+
     os.system("rm ./warriors/*") ## remove old population
-    os.system("mv ./temp/* ./warriors/")  ## mv new population to the warriors directory
-    return new_population, new_pop_size
-'''
+    os.system("mv ./tmp/* ./warriors/")  ## mv new population to the warriors directory
+    return new_population
+    
+
 
 ''' Random selection method 
     Replace bottom half of population 

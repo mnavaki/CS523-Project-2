@@ -6,4 +6,4 @@ T16
 
     python main.py
 
-It maintains two top warriors under top-warrior directory.
+It maintains two top warriors under top-warriors directory.
