@@ -13,9 +13,9 @@ for x in range(0,num_islands):
     # Create an intial population
     myPopulation = initPopulation(population_size)
     # Run GA on it
-    endPopulation = runGA(myPopulation, TOURNAMENT, UNIFORM, 100, 1, stopping_criteria):
+    endPopulation = runGA(myPopulation, TOURNAMENT, UNIFORM, 100, 1, stopping_criteria)
     # Pick the top individual to compete in inter-island competition
     top_warriors.append(max(endPopulation, key=lambda warrior: warrior.fitness))
     
 # Do a final competition with top Warriors from each island
-finalPopulation = runGA(top_warriors, TOURNAMENT, UNIFORM, 100, 1, stopping_criteria):
+finalPopulation = runGA(top_warriors, TOURNAMENT, UNIFORM, 100, 1, stopping_criteria)

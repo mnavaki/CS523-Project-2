@@ -70,13 +70,13 @@ def nextGen(population, selection, crossover, crossover_rate, mutation_rate):
             # Tournament for parent1
             parent1_tournament = []
             while (len(parent1_tournament) < tournament_size):
-                parent1_tournament.append(population[np.random.choice(len(population)])
+                parent1_tournament.append(population[np.random.randint(len(population))])
             calcFitness(parent1_tournament)
             child1 = max(parent1_tournament, key=lambda warrior: warrior.fitness)
             # Tournament for parent2
             parent2_tournament = []
             while (len(parent2_tournament) < tournament_size):
-                parent2_tournament.append(population[np.random.choice(len(population)])
+                parent2_tournament.append(population[np.random.randint(len(population))])
             calcFitness(parent2_tournament)
             child2 = max(parent1_tournament, key=lambda warrior: warrior.fitness)
             # If crossover occurs
@@ -99,12 +99,11 @@ def nextGen(population, selection, crossover, crossover_rate, mutation_rate):
         # Sort the population
         sorted_population = sorted(population, key=lambda warrior: warrior.fitness, reverse = True)
         # Copy the top half of Warriors based on fitness into next generation
-        for x in range(0,len(sorted_population)):
+        for x in range(0,len(sorted_population) / 2):
             nextGen.append(sorted_population[x])
         # Randomly select from the top half to fill in the rest
         while (len(nextGen) < len(population)):
-            np.random.choice(len(population)
-            nextGen.append()
+            nextGen.append(sorted_population[np.random.randint(len(population) / 2)])
     
     return nextGen
 
@@ -150,3 +149,4 @@ def getBenchmarkFitness(warrior):
     os.system("rm -rf ./temp")
     # Return result
     return fitness_score
+

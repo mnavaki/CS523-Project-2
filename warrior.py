@@ -100,3 +100,4 @@ class Warrior:
 			red_file.write(line)
 		red_file.write("end ; execution ends here")
 
+
